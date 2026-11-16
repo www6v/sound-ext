@@ -499,6 +499,16 @@
         });
 
         async function startRecording() {
+            // 检查浏览器是否支持麦克风
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                addMessage('system', '⚠️ 您的浏览器不支持麦克风访问。请使用文字模式。');
+                addMessage('system', '提示：尝试使用 Chrome、Firefox 或 Edge 浏览器，并确保使用 HTTPS 或 localhost 访问。');
+
+                // 自动切换到文字模式
+                document.querySelector('[data-mode="text"]').click();
+                return;
+            }
+
             try {
                 mediaStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
@@ -640,8 +650,41 @@
         }
 
         // ============================================
+        // 麦克风支持检测
+        // ============================================
+
+        function checkMicrophoneSupport() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.warn('浏览器不支持麦克风 API');
+                addMessage('system', '⚠️ 您的浏览器不支持麦克风访问');
+                addMessage('system', '💡 建议：使用 Chrome/Firefox/Edge 浏览器，并通过 HTTPS 或 localhost 访问');
+
+                // 禁用语音模式按钮
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    if (btn.dataset.mode === 'voice') {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                        btn.style.cursor = 'not-allowed';
+                    }
+                });
+
+                // 自动切换到文字模式
+                currentMode = 'text';
+                setTimeout(() => {
+                    document.querySelector('[data-mode="text"]').click();
+                }, 100);
+
+                return false;
+            }
+            return true;
+        }
+
+        // ============================================
         // 初始化
         // ============================================
+
+        // 页面加载时检查麦克风支持
+        checkMicrophoneSupport();
 
         connect();
     </script>
